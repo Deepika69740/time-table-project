@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Form, Button } from 'react-bootstrap';
-// import { auth, signInWithEmailAndPassword } from '../firebase';
-import { auth, signInWithEmailAndPassword} from '../../firebase';
+// import { auth, signInWithEmailAndPassword} from '../../firebase';
+import { auth, signInWithEmailAndPassword } from '../../firebase';
 import { useNavigate } from 'react-router-dom';
 
 const Login = ({ show, onHide, onSuccess }) => {
