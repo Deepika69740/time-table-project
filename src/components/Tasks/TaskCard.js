@@ -437,29 +437,53 @@ const TaskCard = ({ task, id, setEditingTask, setShowTaskForm, refreshTasks, set
       showErrorAlert('You must be logged in to update tasks');
       return;
     }
-
+    
     try {
+      // Make sure id is defined
+      if (!id) {
+        console.error('Task ID is undefined');
+        showErrorAlert('Failed to update task: Missing task ID');
+        return;
+      }
+      
       const newCompletedStatus = !task.completed;
-      const updatedTask = getValidTaskData({
-        ...task,
+      
+      // Directly update the task without using getValidTaskData
+      // Only update the completed field to minimize what could go wrong
+      await update(ref(database, `users/${user.uid}/tasks/${id}`), {
         completed: newCompletedStatus
       });
-
-      await update(ref(database, `users/${user.uid}/tasks/${id}`), updatedTask);
-
-      const progressChange = newCompletedStatus ? 10 : -10;
-      const newProgress = Math.min(100, Math.max(0, currentProgress + progressChange));
       
-      await update(ref(database, `users/${user.uid}/progress`), { value: newProgress });
-      setUserProgress(newProgress);
+      console.log('Task update successful');
+      
+      // Update progress separately
+      try {
+        const progressChange = newCompletedStatus ? 10 : -10;
+        // Ensure currentProgress is a number
+        const progressRef = ref(database, `users/${user.uid}/progress`);
+        const progressSnapshot = await get(progressRef);
+        let currentProgressValue = 0;
+        
+        if (progressSnapshot.exists()) {
+          currentProgressValue = progressSnapshot.val().value || 0;
+        }
+        
+        const newProgress = Math.min(100, Math.max(0, currentProgressValue + progressChange));
+        
+        await update(progressRef, { value: newProgress });
+        setUserProgress(newProgress);
+        console.log('Progress update successful');
+      } catch (progressError) {
+        console.error('Error updating progress:', progressError);
+        // Continue execution even if progress update fails
+      }
       
       refreshTasks();
     } catch (error) {
       console.error('Error updating task:', error);
-      showErrorAlert('Failed to update task');
+      showErrorAlert('Failed to update task: ' + error.message);
     }
   };
-
   // Test notification buttons
   const testCreatedNotification = async () => {
     try {
@@ -528,22 +552,22 @@ const TaskCard = ({ task, id, setEditingTask, setShowTaskForm, refreshTasks, set
             <Button variant="outline-danger" size="sm" onClick={handleDelete}>
               <FaTrash /> Delete
             </Button>
-            <Button 
+            {/* <Button 
               variant="outline-info" 
               size="sm" 
               onClick={testCreatedNotification}
               title="Test creation notification"
             >
               Test Add Notification
-            </Button>
-            <Button 
+            </Button> */}
+            {/* <Button 
               variant="outline-warning" 
               size="sm" 
               onClick={testCompletedNotification}
               title="Test completion notification"
             >
               Test Time Up Notification
-            </Button>
+            </Button> */}
           </ButtonGroup>
         </Card.Body>
       </Card>

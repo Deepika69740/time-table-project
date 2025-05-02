@@ -1,11 +1,11 @@
 // import React, { useState, useEffect } from 'react';
-// import { Button, Card, Col, Row, Container, Navbar, Nav } from 'react-bootstrap';
+// import { Button, Card, Col, Row, Container, Navbar, Nav, ProgressBar, Badge } from 'react-bootstrap';
 // import { auth, database, ref, onValue } from '../firebase';
 // import { signOut } from 'firebase/auth';
 // import { useNavigate } from 'react-router-dom';
 // import TaskForm from './Tasks/TaskForm';
 // import TaskCard from './Tasks/TaskCard';
-// import { FaCalendarAlt, FaUser, FaBars } from 'react-icons/fa';
+// import { FaCalendarAlt, FaUser, FaBars, FaTasks, FaCheckCircle, FaRegClock, FaBell } from 'react-icons/fa';
 
 // const Dashboard = ({ onLogout }) => {
 //   const [userData, setUserData] = useState(null);
@@ -14,7 +14,29 @@
 //   const [showTaskForm, setShowTaskForm] = useState(false);
 //   const [editingTask, setEditingTask] = useState(null);
 //   const [showSidebar, setShowSidebar] = useState(window.innerWidth > 768);
+//   const [progress, setProgress] = useState(0);
+//   const [activeTab, setActiveTab] = useState('all'); // 'all', 'completed', 'remaining'
+//   const [notifications, setNotifications] = useState([]);
+//   const [showNotifications, setShowNotifications] = useState(false);
+  
 //   const navigate = useNavigate();
+
+//   // Filter tasks based on active tab
+//   const filteredTasks = () => {
+//     switch(activeTab) {
+//       case 'completed':
+//         return tasks.filter(task => task.completed);
+//       case 'remaining':
+//         return tasks.filter(task => !task.completed);
+//       default:
+//         return tasks;
+//     }
+//   };
+
+//   // Calculate task statistics
+//   const totalTasks = tasks.length;
+//   const completedTasks = tasks.filter(task => task.completed).length;
+//   const remainingTasks = totalTasks - completedTasks;
 
 //   const fetchTasks = () => {
 //     const user = auth.currentUser;
@@ -28,8 +50,14 @@
 //             ...task
 //           }));
 //           setTasks(tasksList);
+          
+//           // Calculate progress
+//           const completed = tasksList.filter(task => task.completed).length;
+//           const newProgress = tasksList.length > 0 ? Math.round((completed / tasksList.length) * 100) : 0;
+//           setProgress(newProgress);
 //         } else {
 //           setTasks([]);
+//           setProgress(0);
 //         }
 //       });
 //     }
@@ -37,7 +65,7 @@
 
 //   useEffect(() => {
 //     const handleResize = () => {
-//       setShowSidebar(window.innerWidth > 768);
+//       setShowSidebar(window.innerWidth > 800);
 //     };
 
 //     window.addEventListener('resize', handleResize);
@@ -58,6 +86,35 @@
 //     setLoading(false);
 //   }, []);
 
+//   useEffect(() => {
+//     if (tasks.length > 0) {
+//       const currentDate = new Date();
+//       const upcomingTasks = tasks.filter(task => {
+//         if (!task.dueDate || task.completed) return false;
+//         const dueDate = new Date(task.dueDate);
+//         const diffTime = dueDate - currentDate;
+//         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+//         return diffDays >= 0 && diffDays <= 2; // Tasks due within 2 days
+//       });
+      
+//       if (upcomingTasks.length > 0) {
+//         const newNotifications = upcomingTasks.map(task => ({
+//           id: task.id,
+//           title: task.title,
+//           message: `Task due ${new Date(task.dueDate).toLocaleDateString()}`,
+//           timestamp: new Date().toISOString(),
+//           read: false
+//         }));
+        
+//         setNotifications(prev => {
+//           const existingIds = prev.map(n => n.id);
+//           const uniqueNew = newNotifications.filter(n => !existingIds.includes(n.id));
+//           return [...prev, ...uniqueNew];
+//         });
+//       }
+//     }
+//   }, [tasks]);
+
 //   const handleLogout = async () => {
 //     try {
 //       await signOut(auth);
@@ -68,6 +125,14 @@
 //     }
 //   };
 
+//   const markAllAsRead = () => {
+//     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+//   };
+
+//   const removeNotification = (id) => {
+//     setNotifications(prev => prev.filter(n => n.id !== id));
+//   };
+
 //   if (loading) {
 //     return <div className="text-center mt-5">Loading...</div>;
 //   }
@@ -76,129 +141,255 @@
 //     return <div className="text-center mt-5">User data not found</div>;
 //   }
 
-//   return (
-//     <div className="d-flex flex-column" style={{ minHeight: '100vh' }}>
-//       {/* Full-width Navbar with shadow */}
-//       <Navbar bg="dark" variant="dark" expand="lg" className="px-3 w-100 shadow-sm" style={{ height: '60px' }}>
-//         <Container fluid className="px-0">
-//           <Button 
-//             variant="dark" 
-//             className="me-2 d-md-none"
-//             onClick={() => setShowSidebar(!showSidebar)}
-//           >
-//             <FaBars />
-//           </Button>
-          
-//           <Navbar.Brand href="#" className="d-flex align-items-center ms-md-2">
-//             <FaCalendarAlt className="me-2" style={{ fontSize: '1.5rem' }} />
-//             <span style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>T T Scheduler</span>
-//           </Navbar.Brand>
-          
-//           <Navbar.Collapse className="justify-content-end">
-//             <Nav className="align-items-center">
-//               <div className="d-flex align-items-center me-3 text-white">
-//                 <FaUser className="me-2" />
-//                 <span>{userData.name}</span>
-//               </div>
-//               <Button 
-//                 variant="outline-light" 
-//                 size="sm"
-//                 onClick={handleLogout}
-//               >
-//                 Logout
-//               </Button>
-//             </Nav>
-//           </Navbar.Collapse>
-//         </Container>
-//       </Navbar>
+//   const unreadCount = notifications.filter(n => !n.read).length;
 
-//       {/* Main Content Container */}
-//       <Container fluid className="flex-grow-1 p-0">
-//         <Row className="g-0" style={{ height: 'calc(100vh - 60px)' }}>
-//           {/* Sidebar */}
-//           <Col 
-//             md={3} 
-//             className={`sidebar bg-light p-3 ${!showSidebar ? 'd-none' : 'd-md-block'}`}
-//             style={{ overflowY: 'auto' }}
-//           >
-//             <Card className="user-card mb-4">
-//               <Card.Body>
-//                 <Card.Title>User Profile</Card.Title>
-//                 <div className="user-details">
-//                   <p><strong>Name:</strong> {userData.name}</p>
-//                   <p><strong>Email:</strong> {userData.email}</p>
-//                   <p><strong>Joined:</strong> {new Date(userData.createdAt).toLocaleDateString()}</p>
+//   return (
+//     <div className="d-flex flex-column" style={{ minHeight: '100vh', width: '100%' }}>
+//       <div className="d-flex flex-grow-1" style={{ width: '100%' }}>
+//         <div 
+//           className={`sidebar bg-light p-3 ${!showSidebar ? 'd-none' : 'd-lg-block'}`}
+//           style={{ 
+//             width: '250px',
+//             minHeight: 'calc(100vh - 56px)',
+//             borderRight: '1px solid #dee2e6',
+//             overflowY: 'auto'
+//           }}
+//         >
+//           <Card className="user-card mb-4 border-0 shadow-sm">
+//             <Card.Body>
+//               <div className="text-center mb-3">
+//                 <div className="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" 
+//                      style={{ width: '70px', height: '70px' }}>
+//                   <FaUser style={{ fontSize: '1.8rem', color: 'white' }} />
 //                 </div>
+//                 <h5 className="mt-3 mb-1">{userData.name}</h5>
+//                 <small className="text-muted">{userData.email}</small>
+//               </div>
+              
+//               {/* <ProgressBar 
+//                 variant="primary" 
+//                 now={progress} 
+//                 label={`${progress}%`} 
+//                 className="mb-3" 
+//                 style={{ height: '10px' }}
+//               /> */}
+              
+//               <div className="d-grid gap-1">
 //                 <Button
 //                   variant="primary"
-//                   onClick={() => setShowTaskForm(true)}
-//                   className="w-100 mb-3"
+//                   onClick={() => {
+//                     setEditingTask(null);
+//                     setShowTaskForm(true);
+//                   }}
 //                 >
-//                   Add Task
+//                   + Add New Task
 //                 </Button>
-//               </Card.Body>
-//             </Card>
-//           </Col>
+//               </div>
+//             </Card.Body>
+//           </Card>
+          
+//           {/* <Nav className="flex-column">
+//             <Nav.Link href="#dashboard" className="mb-2 d-flex align-items-center">
+//               <FaCalendarAlt className="me-3" /> Dashboard
+//             </Nav.Link>
+//             <Nav.Link href="#tasks" className="mb-2 d-flex align-items-center">
+//               <FaTasks className="me-3" /> Tasks
+//             </Nav.Link>
+//             <Nav.Link href="#calendar" className="mb-2 d-flex align-items-center">
+//               <FaCalendarAlt className="me-3" /> Calendar
+//             </Nav.Link>
+//           </Nav> */}
+//         </div>
 
-//           {/* Main Content Area */}
-//           <Col 
-//             md={9} 
-//             className="main-content p-4" 
-//             style={{ 
-//               overflowY: 'auto',
-//               height: 'calc(100vh - 60px)'
-//             }}
-//           >
-//             <h2>Welcome, {userData.name}!</h2>
-//             <Row className="task-list mt-4">
-//               {tasks.length > 0 ? (
-//                 tasks.map(task => (
-//                   <Col key={task.id} xs={12} sm={6} lg={4} className="mb-4">
-//                     <TaskCard
-//                       task={task}
-//                       id={task.id}
-//                       setEditingTask={setEditingTask}
-//                       setShowTaskForm={setShowTaskForm}
-//                       refreshTasks={fetchTasks}
-//                     />
-//                   </Col>
-//                 ))
-//               ) : (
-//                 <Col>
-//                   <p>No tasks found. Add your first task!</p>
-//                 </Col>
+//         {/* Main Content Area - Full Width */}
+//         <div 
+//           className="flex-grow-1 p-3" 
+//           style={{ 
+//             minHeight: 'calc(100vh - 56px)',
+//             overflowY: 'auto',
+//             backgroundColor: '#f8f9fa',
+//             width: showSidebar ? 'calc(100% - 250px)' : '100%'
+//           }}
+//         >
+//           {/* Page Header with Toggle Button */}
+//           <div className="d-flex justify-content-between align-items-center mb-4">
+//             <div className="d-flex align-items-center">
+//               {!showSidebar && (
+//                 <Button 
+//                   variant="light" 
+//                   className="me-3 p-1 border" 
+//                   onClick={() => setShowSidebar(!showSidebar)}
+//                 >
+//                   <FaBars />
+//                 </Button>
 //               )}
-//             </Row>
-//           </Col>
-//         </Row>
-//       </Container>
+//               <h4 className="mb-0">Dashboard</h4>
+//             </div>
+//             <Button 
+//               variant="primary" 
+//               size="sm"
+//               onClick={() => {
+//                 setEditingTask(null);
+//                 setShowTaskForm(true);
+//               }}
+//             >
+//               + Add Task
+//             </Button>
+//           </div>
+          
+//           {/* Task Statistics Cards */}
+//           <Row className="mb-4 g-3">
+//             <Col md={4}>
+//               <Card 
+//                 className={`shadow-sm border-0 h-100 cursor-pointer ${activeTab === 'all' ? 'border-primary' : ''}`}
+//                 onClick={() => setActiveTab('all')}
+//               >
+//                 <Card.Body className="d-flex align-items-center">
+//                   <div className="bg-primary bg-opacity-10 rounded p-3 me-3">
+//                     <FaTasks className="text-primary" size={24} />
+//                   </div>
+//                   <div>
+//                     <h6 className="text-muted mb-1">Total Tasks</h6>
+//                     <h3 className="mb-0">{totalTasks}</h3>
+//                   </div>
+//                 </Card.Body>
+//               </Card>
+//             </Col>
+            
+//             <Col md={4}>
+//               <Card 
+//                 className={`shadow-sm border-0 h-100 cursor-pointer ${activeTab === 'completed' ? 'border-success' : ''}`}
+//                 onClick={() => setActiveTab('completed')}
+//               >
+//                 <Card.Body className="d-flex align-items-center">
+//                   <div className="bg-success bg-opacity-10 rounded p-3 me-3">
+//                     <FaCheckCircle className="text-success" size={24} />
+//                   </div>
+//                   <div>
+//                     <h6 className="text-muted mb-1">Completed</h6>
+//                     <h3 className="mb-0">{completedTasks}</h3>
+//                   </div>
+//                 </Card.Body>
+//               </Card>
+//             </Col>
+            
+//             <Col md={4}>
+//               <Card 
+//                 className={`shadow-sm border-0 h-100 cursor-pointer ${activeTab === 'remaining' ? 'border-warning' : ''}`}
+//                 onClick={() => setActiveTab('remaining')}
+//               >
+//                 <Card.Body className="d-flex align-items-center">
+//                   <div className="bg-warning bg-opacity-10 rounded p-3 me-3">
+//                     <FaRegClock className="text-warning" size={24} />
+//                   </div>
+//                   <div>
+//                     <h6 className="text-muted mb-1">Remaining</h6>
+//                     <h3 className="mb-0">{remainingTasks}</h3>
+//                   </div>
+//                 </Card.Body>
+//               </Card>
+//             </Col>
+//           </Row>
+          
+//           {/* Task List */}
+//           <Card className="shadow-sm border-0">
+//             <Card.Body>
+//               <div className="d-flex justify-content-between align-items-center mb-4">
+//                 <div>
+//                   <h5 className="mb-0">Your {activeTab === 'completed' ? 'Completed' : activeTab === 'remaining' ? 'Remaining' : ''} Tasks</h5>
+//                   <small className="text-muted">
+//                     {activeTab === 'all' && `${totalTasks} total tasks`}
+//                     {activeTab === 'completed' && `${completedTasks} completed tasks`}
+//                     {activeTab === 'remaining' && `${remainingTasks} remaining tasks`}
+//                   </small>
+//                 </div>
+//                 <Button 
+//                   variant="outline-primary" 
+//                   size="sm"
+//                   onClick={() => {
+//                     setEditingTask(null);
+//                     setShowTaskForm(true);
+//                   }}
+//                 >
+//                   + Add Task
+//                 </Button>
+//               </div>
+              
+//               {filteredTasks().length > 0 ? (
+//                 <Row className="g-3">
+//                   {filteredTasks().map(task => (
+//                     <Col key={task.id} xs={12} sm={6} lg={4}>
+//                       <TaskCard
+//                         task={task}
+//                         id={task.id}
+//                         setEditingTask={setEditingTask}
+//                         setShowTaskForm={setShowTaskForm}
+//                         refreshTasks={fetchTasks}
+//                       />
+//                     </Col>
+//                   ))}
+//                 </Row>
+//               ) : (
+//                 <div className="text-center py-5">
+//                   <div className="bg-light rounded-circle d-inline-flex align-items-center justify-content-center p-4 mb-3">
+//                     {activeTab === 'completed' ? (
+//                       <FaCheckCircle size={32} className="text-muted" />
+//                     ) : activeTab === 'remaining' ? (
+//                       <FaRegClock size={32} className="text-muted" />
+//                     ) : (
+//                       <FaTasks size={32} className="text-muted" />
+//                     )}
+//                   </div>
+//                   <h5 className="mb-2">
+//                     {activeTab === 'completed' ? 'No completed tasks yet' : 
+//                      activeTab === 'remaining' ? 'All tasks completed!' : 
+//                      'No tasks found'}
+//                   </h5>
+//                   <p className="text-muted mb-3">
+//                     {activeTab === 'all' ? 'Add your first task to get started' : ''}
+//                   </p>
+//                   {activeTab === 'all' && (
+//                     <Button 
+//                       variant="primary"
+//                       onClick={() => setShowTaskForm(true)}
+//                     >
+//                       Create Task
+//                     </Button>
+//                   )}
+//                 </div>
+//               )}
+//             </Card.Body>
+//           </Card>
+//         </div>
+//       </div>
 
+//       {/* Task Form Modal */}
 //       <TaskForm
 //         show={showTaskForm}
-//         onHide={() => setShowTaskForm(false)}
+//         onHide={() => {
+//           setShowTaskForm(false);
+//           setEditingTask(null);
+//         }}
 //         editingTask={editingTask}
 //         setEditingTask={setEditingTask}
 //         refreshTasks={fetchTasks}
 //       />
+      
 //     </div>
 //   );
 // };
 
 // export default Dashboard;
 
-
-
-
-
-
 import React, { useState, useEffect } from 'react';
-import { Button, Card, Col, Row, Container, Navbar, Nav, ProgressBar } from 'react-bootstrap';
+import { Button, Card, Col, Row, Container, Navbar, Nav, ProgressBar, Badge } from 'react-bootstrap';
 import { auth, database, ref, onValue } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import TaskForm from './Tasks/TaskForm';
 import TaskCard from './Tasks/TaskCard';
-import { FaCalendarAlt, FaUser, FaBars } from 'react-icons/fa';
+import { FaCalendarAlt, FaUser, FaBars, FaTasks, FaCheckCircle, FaRegClock, FaBell } from 'react-icons/fa';
+import emailjs from '@emailjs/browser';
 
 const Dashboard = ({ onLogout }) => {
   const [userData, setUserData] = useState(null);
@@ -208,7 +399,29 @@ const Dashboard = ({ onLogout }) => {
   const [editingTask, setEditingTask] = useState(null);
   const [showSidebar, setShowSidebar] = useState(window.innerWidth > 768);
   const [progress, setProgress] = useState(0);
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'completed', 'remaining'
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [emailSent, setEmailSent] = useState(false); // Track if email has been sent for this session
+  
   const navigate = useNavigate();
+
+  // Filter tasks based on active tab
+  const filteredTasks = () => {
+    switch(activeTab) {
+      case 'completed':
+        return tasks.filter(task => task.completed);
+      case 'remaining':
+        return tasks.filter(task => !task.completed);
+      default:
+        return tasks;
+    }
+  };
+
+  // Calculate task statistics
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(task => task.completed).length;
+  const remainingTasks = totalTasks - completedTasks;
 
   const fetchTasks = () => {
     const user = auth.currentUser;
@@ -222,16 +435,14 @@ const Dashboard = ({ onLogout }) => {
             ...task
           }));
           setTasks(tasksList);
+          
+          // Calculate progress
+          const completed = tasksList.filter(task => task.completed).length;
+          const newProgress = tasksList.length > 0 ? Math.round((completed / tasksList.length) * 100) : 0;
+          setProgress(newProgress);
         } else {
           setTasks([]);
-        }
-      });
-
-      // Fetch progress
-      const progressRef = ref(database, `users/${user.uid}/progress`);
-      onValue(progressRef, (snapshot) => {
-        if (snapshot.exists()) {
-          setProgress(snapshot.val().value || 0);
+          setProgress(0);
         }
       });
     }
@@ -239,7 +450,7 @@ const Dashboard = ({ onLogout }) => {
 
   useEffect(() => {
     const handleResize = () => {
-      setShowSidebar(window.innerWidth > 768);
+      setShowSidebar(window.innerWidth > 800);
     };
 
     window.addEventListener('resize', handleResize);
@@ -256,9 +467,57 @@ const Dashboard = ({ onLogout }) => {
         }
       });
       fetchTasks();
+
+      // Send email notification on login (only once per session)
+      if (userData && !emailSent) {
+        const templateParams = {
+          to_email: userData.email,
+          user_name: userData.name || 'User',
+          login_time: new Date().toLocaleString(),
+        };
+
+        emailjs
+          .send('service_0x9tr4w', 'template_fs3wu8n', templateParams, 'LSYUfA2MmOon_Fzlv')
+          .then((response) => {
+            console.log('Email sent successfully:', response.status, response.text);
+            setEmailSent(true); // Prevent sending multiple emails
+          })
+          .catch((error) => {
+            console.error('Failed to send email:', error);
+          });
+      }
     }
     setLoading(false);
-  }, []);
+  }, [userData, emailSent]);
+
+  useEffect(() => {
+    if (tasks.length > 0) {
+      const currentDate = new Date();
+      const upcomingTasks = tasks.filter(task => {
+        if (!task.dueDate || task.completed) return false;
+        const dueDate = new Date(task.dueDate);
+        const diffTime = dueDate - currentDate;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays >= 0 && diffDays <= 2; // Tasks due within 2 days
+      });
+      
+      if (upcomingTasks.length > 0) {
+        const newNotifications = upcomingTasks.map(task => ({
+          id: task.id,
+          title: task.title,
+          message: `Task due ${new Date(task.dueDate).toLocaleDateString()}`,
+          timestamp: new Date().toISOString(),
+          read: false
+        }));
+        
+        setNotifications(prev => {
+          const existingIds = prev.map(n => n.id);
+          const uniqueNew = newNotifications.filter(n => !existingIds.includes(n.id));
+          return [...prev, ...uniqueNew];
+        });
+      }
+    }
+  }, [tasks]);
 
   const handleLogout = async () => {
     try {
@@ -270,6 +529,14 @@ const Dashboard = ({ onLogout }) => {
     }
   };
 
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  const removeNotification = (id) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
   if (loading) {
     return <div className="text-center mt-5">Loading...</div>;
   }
@@ -278,128 +545,242 @@ const Dashboard = ({ onLogout }) => {
     return <div className="text-center mt-5">User data not found</div>;
   }
 
-  return (
-    <div className="d-flex flex-column" style={{ minHeight: '100vh' }}>
-      <Navbar bg="dark" variant="dark" expand="lg" className="px-3 w-100 shadow-sm" style={{ height: '60px' }}>
-        <Container fluid className="px-0">
-          <Button 
-            variant="dark" 
-            className="me-2 d-md-none"
-            onClick={() => setShowSidebar(!showSidebar)}
-          >
-            <FaBars />
-          </Button>
-          
-          <Navbar.Brand href="#" className="d-flex align-items-center ms-md-2">
-            <FaCalendarAlt className="me-2" style={{ fontSize: '1.5rem' }} />
-            <span style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>T T Scheduler</span>
-          </Navbar.Brand>
-          
-          <Navbar.Collapse className="justify-content-end">
-            <Nav className="align-items-center">
-              <div className="d-flex align-items-center me-3 text-white">
-                <FaUser className="me-2" />
-                <span>{userData.name}</span>
-              </div>
-              <Button 
-                variant="outline-light" 
-                size="sm"
-                onClick={handleLogout}
-              >
-                Logout
-              </Button>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
+  const unreadCount = notifications.filter(n => !n.read).length;
 
-      <Container fluid className="flex-grow-1 p-0">
-        <Row className="g-0" style={{ height: 'calc(100vh - 60px)' }}>
-          {/* Sidebar */}
-          <Col 
-            md={3} 
-            className={`sidebar bg-light p-3 ${!showSidebar ? 'd-none' : 'd-md-block'}`}
-            style={{ overflowY: 'auto' }}
-          >
-            <Card className="user-card mb-4">
-              <Card.Body>
-                <Card.Title>User Profile</Card.Title>
-                <div className="user-details">
-                  <p><strong>Name:</strong> {userData.name}</p>
-                  <p><strong>Email:</strong> {userData.email}</p>
-                  <p><strong>Joined:</strong> {new Date(userData.createdAt).toLocaleDateString()}</p>
+  return (
+    <div className="d-flex flex-column" style={{ minHeight: '100vh', width: '100%' }}>
+      <div className="d-flex flex-grow-1" style={{ width: '100%' }}>
+        <div 
+          className={`sidebar bg-light p-3 ${!showSidebar ? 'd-none' : 'd-lg-block'}`}
+          style={{ 
+            width: '250px',
+            minHeight: 'calc(100vh - 56px)',
+            borderRight: '1px solid #dee2e6',
+            overflowY: 'auto'
+          }}
+        >
+          <Card className="user-card mb-4 border-0 shadow-sm">
+            <Card.Body>
+              <div className="text-center mb-3">
+                <div className="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" 
+                     style={{ width: '70px', height: '70px' }}>
+                  <FaUser style={{ fontSize: '1.8rem', color: 'white' }} />
                 </div>
+                <h5 className="mt-3 mb-1">{userData.name}</h5>
+                <small className="text-muted">{userData.email}</small>
+              </div>
+              
+              {/* <ProgressBar 
+                variant="primary" 
+                now={progress} 
+                label={`${progress}%`} 
+                className="mb-3" 
+                style={{ height: '10px' }}
+              /> */}
+              
+              <div className="d-grid gap-1">
                 <Button
                   variant="primary"
-                  onClick={() => setShowTaskForm(true)}
-                  className="w-100 mb-3"
+                  onClick={() => {
+                    setEditingTask(null);
+                    setShowTaskForm(true);
+                  }}
                 >
-                  Add Task
+                  + Add New Task
                 </Button>
-                
-                {/* Progress Bar moved to sidebar */}
-                <div className="mt-4">
-                  <h6>Task Progress</h6>
-                  <ProgressBar now={progress} label={`${progress}%`} />
-                  <div className="text-center mt-2">
-                    <small>{progress}% of tasks completed</small>
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
+              </div>
+            </Card.Body>
+          </Card>
+          
+          {/* <Nav className="flex-column">
+            <Nav.Link href="#dashboard" className="mb-2 d-flex align-items-center">
+              <FaCalendarAlt className="me-3" /> Dashboard
+            </Nav.Link>
+            <Nav.Link href="#tasks" className="mb-2 d-flex align-items-center">
+              <FaTasks className="me-3" /> Tasks
+            </Nav.Link>
+            <Nav.Link href="#calendar" className="mb-2 d-flex align-items-center">
+              <FaCalendarAlt className="me-3" /> Calendar
+            </Nav.Link>
+          </Nav> */}
+        </div>
 
-          {/* Main Content Area */}
-          <Col 
-            md={9} 
-            className="main-content p-4" 
-            style={{ 
-              overflowY: 'auto',
-              height: 'calc(100vh - 60px)'
-            }}
-          >
-            <h2>Welcome, {userData.name}!</h2>
-            <Row className="task-list mt-4">
-              {tasks.length > 0 ? (
-                tasks.map(task => (
-                  <Col key={task.id} xs={12} sm={6} lg={4} className="mb-4">
-                    <TaskCard
-                      task={task}
-                      id={task.id}
-                      setEditingTask={setEditingTask}
-                      setShowTaskForm={setShowTaskForm}
-                      refreshTasks={fetchTasks}
-                    />
-                  </Col>
-                ))
-              ) : (
-                <Col>
-                  <p>No tasks found. Add your first task!</p>
-                </Col>
+        {/* Main Content Area - Full Width */}
+        <div 
+          className="flex-grow-1 p-3" 
+          style={{ 
+            minHeight: 'calc(100vh - 56px)',
+            overflowY: 'auto',
+            backgroundColor: '#f8f9fa',
+            width: showSidebar ? 'calc(100% - 250px)' : '100%'
+          }}
+        >
+          {/* Page Header with Toggle Button */}
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <div className="d-flex align-items-center">
+              {!showSidebar && (
+                <Button 
+                  variant="light" 
+                  className="me-3 p-1 border" 
+                  onClick={() => setShowSidebar(!showSidebar)}
+                >
+                  <FaBars />
+                </Button>
               )}
-            </Row>
-          </Col>
-        </Row>
-      </Container>
+              <h4 className="mb-0">Dashboard</h4>
+            </div>
+            <Button 
+              variant="primary" 
+              size="sm"
+              onClick={() => {
+                setEditingTask(null);
+                setShowTaskForm(true);
+              }}
+            >
+              + Add Task
+            </Button>
+          </div>
+          
+          {/* Task Statistics Cards */}
+          <Row className="mb-4 g-3">
+            <Col md={4}>
+              <Card 
+                className={`shadow-sm border-0 h-100 cursor-pointer ${activeTab === 'all' ? 'border-primary' : ''}`}
+                onClick={() => setActiveTab('all')}
+              >
+                <Card.Body className="d-flex align-items-center">
+                  <div className="bg-primary bg-opacity-10 rounded p-3 me-3">
+                    <FaTasks className="text-primary" size={24} />
+                  </div>
+                  <div>
+                    <h6 className="text-muted mb-1">Total Tasks</h6>
+                    <h3 className="mb-0">{totalTasks}</h3>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+            
+            <Col md={4}>
+              <Card 
+                className={`shadow-sm border-0 h-100 cursor-pointer ${activeTab === 'completed' ? 'border-success' : ''}`}
+                onClick={() => setActiveTab('completed')}
+              >
+                <Card.Body className="d-flex align-items-center">
+                  <div className="bg-success bg-opacity-10 rounded p-3 me-3">
+                    <FaCheckCircle className="text-success" size={24} />
+                  </div>
+                  <div>
+                    <h6 className="text-muted mb-1">Completed</h6>
+                    <h3 className="mb-0">{completedTasks}</h3>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+            
+            <Col md={4}>
+              <Card 
+                className={`shadow-sm border-0 h-100 cursor-pointer ${activeTab === 'remaining' ? 'border-warning' : ''}`}
+                onClick={() => setActiveTab('remaining')}
+              >
+                <Card.Body className="d-flex align-items-center">
+                  <div className="bg-warning bg-opacity-10 rounded p-3 me-3">
+                    <FaRegClock className="text-warning" size={24} />
+                  </div>
+                  <div>
+                    <h6 className="text-muted mb-1">Remaining</h6>
+                    <h3 className="mb-0">{remainingTasks}</h3>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+          
+          {/* Task List */}
+          <Card className="shadow-sm border-0">
+            <Card.Body>
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <h5 className="mb-0">Your {activeTab === 'completed' ? 'Completed' : activeTab === 'remaining' ? 'Remaining' : ''} Tasks</h5>
+                  <small className="text-muted">
+                    {activeTab === 'all' && `${totalTasks} total tasks`}
+                    {activeTab === 'completed' && `${completedTasks} completed tasks`}
+                    {activeTab === 'remaining' && `${remainingTasks} remaining tasks`}
+                  </small>
+                </div>
+                <Button 
+                  variant="outline-primary" 
+                  size="sm"
+                  onClick={() => {
+                    setEditingTask(null);
+                    setShowTaskForm(true);
+                  }}
+                >
+                  + Add Task
+                </Button>
+              </div>
+              
+              {filteredTasks().length > 0 ? (
+                <Row className="g-3">
+                  {filteredTasks().map(task => (
+                    <Col key={task.id} xs={12} sm={6} lg={4}>
+                      <TaskCard
+                        task={task}
+                        id={task.id}
+                        setEditingTask={setEditingTask}
+                        setShowTaskForm={setShowTaskForm}
+                        refreshTasks={fetchTasks}
+                      />
+                    </Col>
+                  ))}
+                </Row>
+              ) : (
+                <div className="text-center py-5">
+                  <div className="bg-light rounded-circle d-inline-flex align-items-center justify-content-center p-4 mb-3">
+                    {activeTab === 'completed' ? (
+                      <FaCheckCircle size={32} className="text-muted" />
+                    ) : activeTab === 'remaining' ? (
+                      <FaRegClock size={32} className="text-muted" />
+                    ) : (
+                      <FaTasks size={32} className="text-muted" />
+                    )}
+                  </div>
+                  <h5 className="mb-2">
+                    {activeTab === 'completed' ? 'No completed tasks yet' : 
+                     activeTab === 'remaining' ? 'All tasks completed!' : 
+                     'No tasks found'}
+                  </h5>
+                  <p className="text-muted mb-3">
+                    {activeTab === 'all' ? 'Add your first task to get started' : ''}
+                  </p>
+                  {activeTab === 'all' && (
+                    <Button 
+                      variant="primary"
+                      onClick={() => setShowTaskForm(true)}
+                    >
+                      Create Task
+                    </Button>
+                  )}
+                </div>
+              )}
+            </Card.Body>
+          </Card>
+        </div>
+      </div>
 
+      {/* Task Form Modal */}
       <TaskForm
         show={showTaskForm}
-        onHide={() => setShowTaskForm(false)}
+        onHide={() => {
+          setShowTaskForm(false);
+          setEditingTask(null);
+        }}
         editingTask={editingTask}
         setEditingTask={setEditingTask}
         refreshTasks={fetchTasks}
       />
+      
     </div>
   );
 };
 
 export default Dashboard;
-
-
-
-
-
-
-
-
-
