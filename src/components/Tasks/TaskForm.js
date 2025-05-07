@@ -1,337 +1,23 @@
 
-// import React, { useState, useEffect } from 'react';
-// import { Modal, Form, Button, Row, Col } from 'react-bootstrap';
-// import { database, ref, push, update } from '../../firebase';
-// import { getAuth } from 'firebase/auth';
-
-// const TaskForm = ({ show, onHide, editingTask, setEditingTask, refreshTasks }) => {
-//   const [taskName, setTaskName] = useState('');
-//   const [fromTime, setFromTime] = useState('');
-//   const [toTime, setToTime] = useState('');
-//   const [error, setError] = useState('');
-
-//   useEffect(() => {
-//     if (editingTask) {
-//       setTaskName(editingTask.name || '');
-//       setFromTime(editingTask.fromTime || '');
-//       setToTime(editingTask.toTime || '');
-//     } else {
-//       setTaskName('');
-//       setFromTime('');
-//       setToTime('');
-//     }
-//   }, [editingTask]);
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-   
-//     if (!taskName || !fromTime || !toTime) {
-//       setError('All fields are required');
-//       return;
-//     }
-
-//     if (new Date(toTime) < new Date(fromTime)) {
-//       setError('End time must be after start time');
-//       return;
-//     }
-
-//     const auth = getAuth();
-//     const user = auth.currentUser;
-
-//     if (!user) {
-//       setError('You must be logged in to manage tasks');
-//       return;
-//     }
-
-//     try {
-//       const taskData = {
-//         name: taskName,
-//         fromTime: fromTime,
-//         toTime: toTime,
-//         createdAt: editingTask ? editingTask.createdAt : new Date().toISOString()
-//       };
-
-//       if (editingTask) {
-//         await update(ref(database, `users/${user.uid}/tasks/${editingTask.id}`), taskData);
-//       } else {
-//         await push(ref(database, `users/${user.uid}/tasks`), taskData);
-//       }
-
-//       setTaskName('');
-//       setFromTime('');
-//       setToTime('');
-//       setError('');
-//       setEditingTask(null);
-//       onHide();
-//       refreshTasks();
-//     } catch (error) {
-//       setError('Failed to save task: ' + error.message);
-//     }
-//   };
-
-//   return (
-//     <Modal show={show} onHide={() => { setEditingTask(null); onHide(); }} centered>
-//       <Modal.Header closeButton>
-//         <Modal.Title>{editingTask ? 'Edit Task' : 'Add New Task'}</Modal.Title>
-//       </Modal.Header>
-//       <Modal.Body>
-//         <Form onSubmit={handleSubmit}>
-//           <Form.Group as={Row} className="mb-3">
-//             <Form.Label column sm={3}>Task Name</Form.Label>
-//             <Col sm={9}>
-//               <Form.Control
-//                 type="text"
-//                 value={taskName}
-//                 onChange={(e) => setTaskName(e.target.value)}
-//                 placeholder="Enter task name"
-//                 required
-//               />
-//             </Col>
-//           </Form.Group>
-
-//           <Form.Group as={Row} className="mb-3">
-//             <Form.Label column sm={3}>From</Form.Label>
-//             <Col sm={9}>
-//               <Form.Control
-//                 type="datetime-local"
-//                 value={fromTime}
-//                 onChange={(e) => setFromTime(e.target.value)}
-//                 required
-//               />
-//             </Col>
-//           </Form.Group>
-
-//           <Form.Group as={Row} className="mb-3">
-//             <Form.Label column sm={3}>To</Form.Label>
-//             <Col sm={9}>
-//               <Form.Control
-//                 type="datetime-local"
-//                 value={toTime}
-//                 onChange={(e) => setToTime(e.target.value)}
-//                 required
-//               />
-//             </Col>
-//           </Form.Group>
-
-//           {error && (
-//             <Row>
-//               <Col>
-//                 <div className="alert alert-danger">{error}</div>
-//               </Col>
-//             </Row>
-//           )}
-
-//           <Row>
-//             <Col className="text-end">
-//               <Button variant="secondary" onClick={() => { setEditingTask(null); onHide(); }} className="me-2">
-//                 Cancel
-//               </Button>
-//               <Button variant="primary" type="submit">
-//                 {editingTask ? 'Update Task' : 'Add Task'}
-//               </Button>
-//             </Col>
-//           </Row>
-//         </Form>
-//       </Modal.Body>
-//     </Modal>
-//   );
-// };
-
-// export default TaskForm;
-
-
-
-
-// import React, { useState, useEffect } from 'react';
-// import { Modal, Form, Button, Row, Col } from 'react-bootstrap';
-// import { database, ref, push, update } from '../../firebase';
-// import { getAuth } from 'firebase/auth';
-// import emailjs from '@emailjs/browser';
-// import Swal from 'sweetalert2'; 
-
-// const TaskForm = ({ show, onHide, editingTask, setEditingTask, refreshTasks }) => {
-//   const [taskName, setTaskName] = useState('');
-//   const [fromTime, setFromTime] = useState('');
-//   const [toTime, setToTime] = useState('');
-//   const [error, setError] = useState('');
-//   const [successMessage, setSuccessMessage] = useState('');
-  
-//   useEffect(() => {
-//     if (editingTask) {
-//       setTaskName(editingTask.name || '');
-//       setFromTime(editingTask.fromTime || '');
-//       setToTime(editingTask.toTime || '');
-//     } else {
-//       setTaskName('');
-//       setFromTime('');
-//       setToTime('');
-//     }
-//   }, [editingTask]);
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-   
-//     if (!taskName || !fromTime || !toTime) {
-//       setError('All fields are required');
-//       return;
-//     }
-
-//     if (new Date(toTime) < new Date(fromTime)) {
-//       setError('End time must be after start time');
-//       return;
-//     }
-
-//     const auth = getAuth();
-//     const user = auth.currentUser;
-
-//     if (!user) {
-//       setError('You must be logged in to manage tasks');
-//       return;
-//     }
-
-//     try {
-//       const taskData = {
-//         name: taskName,
-//         fromTime: fromTime,
-//         toTime: toTime,
-//         createdAt: editingTask ? editingTask.createdAt : new Date().toISOString()
-//       };
-
-//       let taskAdded = false;
-
-//       if (editingTask) {
-//         await update(ref(database, `users/${user.uid}/tasks/${editingTask.id}`), taskData);
-//       } else {
-//         await push(ref(database, `users/${user.uid}/tasks`), taskData);
-//         taskAdded = true;
-//       }
-
-//       // Send email notification only when adding a new task (not editing)
-//       if (taskAdded) {
-//         const templateParams = {
-//           to_email: user.email,
-//           user_name: user.displayName || user.email.split('@')[0],
-//           task_name: taskName,
-//           from_time: new Date(fromTime).toLocaleString(),
-//           to_time: new Date(toTime).toLocaleString(),
-//         };
-
-//         emailjs
-//           .send('service_0x9tr4w', 'template_fs3wu8n', templateParams, 'LSYUfA2MmOon_Fzlv')
-//           .then((response) => {
-//             // Show SweetAlert2 success popup for 3 seconds
-//             Swal.fire({
-//               icon: 'success',
-//               title: 'Success!',
-//               text: 'Task added and email notification sent successfully!',
-//               timer: 3000, // Display for 3 seconds
-//               timerProgressBar: true, // Show a progress bar
-//               showConfirmButton: false, // Hide the "OK" button
-//             });
-//           })
-//           .catch((error) => {
-//             console.error('Failed to send email:', error);
-//             setError('Failed to send email notification: ' + error.message);
-//           });
-//       }
-
-//       setTaskName('');
-//       setFromTime('');
-//       setToTime('');
-//       setError('');
-//       setEditingTask(null);
-//       onHide();
-//       refreshTasks();
-//     } catch (error) {
-//       setError('Failed to save task: ' + error.message);
-//     }
-//   };
-
-//   return (
-//     <Modal show={show} onHide={() => { setEditingTask(null); onHide(); }} centered>
-//       <Modal.Header closeButton>
-//         <Modal.Title>{editingTask ? 'Edit Task' : 'Add New Task'}</Modal.Title>
-//       </Modal.Header>
-//       <Modal.Body>
-//         <Form onSubmit={handleSubmit}>
-//           <Form.Group as={Row} className="mb-3">
-//             <Form.Label column sm={3}>Task Name</Form.Label>
-//             <Col sm={9}>
-//               <Form.Control
-//                 type="text"
-//                 value={taskName}
-//                 onChange={(e) => setTaskName(e.target.value)}
-//                 placeholder="Enter task name"
-//                 required
-//               />
-//             </Col>
-//           </Form.Group>
-
-//           <Form.Group as={Row} className="mb-3">
-//             <Form.Label column sm={3}>From</Form.Label>
-//             <Col sm={9}>
-//               <Form.Control
-//                 type="datetime-local"
-//                 value={fromTime}
-//                 onChange={(e) => setFromTime(e.target.value)}
-//                 required
-//               />
-//             </Col>
-//           </Form.Group>
-
-//           <Form.Group as={Row} className="mb-3">
-//             <Form.Label column sm={3}>To</Form.Label>
-//             <Col sm={9}>
-//               <Form.Control
-//                 type="datetime-local"
-//                 value={toTime}
-//                 onChange={(e) => setToTime(e.target.value)}
-//                 required
-//               />
-//             </Col>
-//           </Form.Group>
-
-//           {error && (
-//             <Row>
-//               <Col>
-//                 <div className="alert alert-danger">{error}</div>
-//               </Col>
-//             </Row>
-//           )}
-
-//           <Row>
-//             <Col className="text-end">
-//               <Button variant="secondary" onClick={() => { setEditingTask(null); onHide(); }} className="me-2">
-//                 Cancel
-//               </Button>
-//               <Button variant="primary" type="submit">
-//                 {editingTask ? 'Update Task' : 'Add Task'}
-//               </Button>
-//             </Col>
-//           </Row>
-//         </Form>
-//       </Modal.Body>
-//     </Modal>
-//   );
-// };
-
-// export default TaskForm;
-
-
 import React, { useState, useEffect } from 'react';
 import { Modal, Form, Button, Row, Col } from 'react-bootstrap';
 import { database, ref, push, update } from '../../firebase';
 import { getAuth } from 'firebase/auth';
-import emailjs from '@emailjs/browser';
 import Swal from 'sweetalert2'; 
+import emailjs from '@emailjs/browser';
 
 const TaskForm = ({ show, onHide, editingTask, setEditingTask, refreshTasks }) => {
   const [taskName, setTaskName] = useState('');
   const [fromTime, setFromTime] = useState('');
   const [toTime, setToTime] = useState('');
   const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false); // Track submission state
-
+  const [loading, setLoading] = useState(false);
+  
+  // EmailJS configuration
+  const SERVICE_ID = "service_7s8qa0f";
+  const TEMPLATE_ID = "template_k8j29w7";
+  const PUBLIC_KEY = "h7FW0ReYv7_70X8U5";
+  
   useEffect(() => {
     if (editingTask) {
       setTaskName(editingTask.name || '');
@@ -342,20 +28,54 @@ const TaskForm = ({ show, onHide, editingTask, setEditingTask, refreshTasks }) =
       setFromTime('');
       setToTime('');
     }
-  }, [editingTask]);
+    setError('');
+    setLoading(false);
+  }, [editingTask, show]);
+
+  const formatDateTime = (dateTimeStr) => {
+    const date = new Date(dateTimeStr);
+    return date.toLocaleString(); // Format: MM/DD/YYYY, HH:MM:SS AM/PM
+  };
+
+  const sendNotificationEmail = async (taskData, user) => {
+    try {
+      const templateParams = {
+        user_name: user.displayName || user.email.split('@')[0],
+        task_name: taskData.name,
+        from_time: formatDateTime(taskData.fromTime),
+        to_time: formatDateTime(taskData.toTime),
+        to_email: user.email
+      };
+
+      const response = await emailjs.send(
+        SERVICE_ID,
+        TEMPLATE_ID,
+        templateParams,
+        PUBLIC_KEY
+      );
+
+      console.log('Email notification sent successfully!', response);
+      return true;
+    } catch (error) {
+      console.error('Failed to send email notification:', error);
+      return false;
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (isSubmitting) return; // Prevent multiple submissions
-
+    setLoading(true);
+    setError('');
+   
     if (!taskName || !fromTime || !toTime) {
       setError('All fields are required');
+      setLoading(false);
       return;
     }
 
     if (new Date(toTime) < new Date(fromTime)) {
       setError('End time must be after start time');
+      setLoading(false);
       return;
     }
 
@@ -364,70 +84,51 @@ const TaskForm = ({ show, onHide, editingTask, setEditingTask, refreshTasks }) =
 
     if (!user) {
       setError('You must be logged in to manage tasks');
+      setLoading(false);
       return;
     }
-
-    setIsSubmitting(true); // Disable further submissions
 
     try {
       const taskData = {
         name: taskName,
         fromTime: fromTime,
         toTime: toTime,
-        createdAt: editingTask ? editingTask.createdAt : new Date().toISOString(),
+        createdAt: editingTask ? editingTask.createdAt : new Date().toISOString()
       };
 
-      let taskAdded = false;
-
+      let emailSent = false;
+      
       if (editingTask) {
+        // Update existing task - no email notification
         await update(ref(database, `users/${user.uid}/tasks/${editingTask.id}`), taskData);
       } else {
+        // New task - send email notification
         await push(ref(database, `users/${user.uid}/tasks`), taskData);
-        taskAdded = true;
+        emailSent = await sendNotificationEmail(taskData, user);
       }
 
-      // Send email notification only when adding a new task (not editing)
-      if (taskAdded) {
-        const templateParams = {
-          to_email: user.email,
-          user_name: user.displayName || user.email.split('@')[0],
-          task_name: taskName,
-          from_time: new Date(fromTime).toLocaleString(),
-          to_time: new Date(toTime).toLocaleString(),
-        };
+      // Show success message
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: `Task ${editingTask ? 'updated' : 'added'} successfully!${emailSent ? ' Email notification sent.' : ''}`,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
 
-        await emailjs.send('service_0x9tr4w', 'template_fs3wu8n', templateParams, 'LSYUfA2MmOon_Fzlv')
-          .then((response) => {
-            // Show SweetAlert2 success popup for 3 seconds
-            Swal.fire({
-              icon: 'success',
-              title: 'Success!',
-              text: 'Task added and email notification sent successfully!',
-              timer: 3000,
-              timerProgressBar: true,
-              showConfirmButton: false,
-            });
-          })
-          .catch((error) => {
-            console.error('Failed to send email:', error);
-            setError('Failed to send email notification: ' + error.message);
-            setIsSubmitting(false); // Re-enable submission on error
-            return;
-          });
-      }
-
-      // Reset form and close modal only after successful submission
+      // Reset form and close modal
       setTaskName('');
       setFromTime('');
       setToTime('');
       setError('');
       setEditingTask(null);
-      setIsSubmitting(false);
       onHide();
       refreshTasks();
     } catch (error) {
       setError('Failed to save task: ' + error.message);
-      setIsSubmitting(false); // Re-enable submission on error
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -447,7 +148,6 @@ const TaskForm = ({ show, onHide, editingTask, setEditingTask, refreshTasks }) =
                 onChange={(e) => setTaskName(e.target.value)}
                 placeholder="Enter task name"
                 required
-                disabled={isSubmitting}
               />
             </Col>
           </Form.Group>
@@ -460,7 +160,6 @@ const TaskForm = ({ show, onHide, editingTask, setEditingTask, refreshTasks }) =
                 value={fromTime}
                 onChange={(e) => setFromTime(e.target.value)}
                 required
-                disabled={isSubmitting}
               />
             </Col>
           </Form.Group>
@@ -473,7 +172,6 @@ const TaskForm = ({ show, onHide, editingTask, setEditingTask, refreshTasks }) =
                 value={toTime}
                 onChange={(e) => setToTime(e.target.value)}
                 required
-                disabled={isSubmitting}
               />
             </Col>
           </Form.Group>
@@ -488,20 +186,11 @@ const TaskForm = ({ show, onHide, editingTask, setEditingTask, refreshTasks }) =
 
           <Row>
             <Col className="text-end">
-              <Button
-                variant="secondary"
-                onClick={() => { setEditingTask(null); onHide(); }}
-                className="me-2"
-                disabled={isSubmitting}
-              >
+              <Button variant="secondary" onClick={() => { setEditingTask(null); onHide(); }} className="me-2" disabled={loading}>
                 Cancel
               </Button>
-              <Button
-                variant="primary"
-                type="submit"
-                disabled={isSubmitting}
-              >
-                {editingTask ? 'Update Task' : 'Add Task'}
+              <Button variant="primary" type="submit" disabled={loading}>
+                {loading ? 'Processing...' : (editingTask ? 'Update Task' : 'Add Task')}
               </Button>
             </Col>
           </Row>
@@ -512,3 +201,4 @@ const TaskForm = ({ show, onHide, editingTask, setEditingTask, refreshTasks }) =
 };
 
 export default TaskForm;
+

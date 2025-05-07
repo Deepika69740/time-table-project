@@ -381,6 +381,9 @@
 
 // export default Dashboard;
 
+
+
+
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Col, Row, Container, Navbar, Nav, ProgressBar, Badge } from 'react-bootstrap';
 import { auth, database, ref, onValue } from '../firebase';
@@ -405,6 +408,11 @@ const Dashboard = ({ onLogout }) => {
   const [emailSent, setEmailSent] = useState(false); // Track if email has been sent for this session
   
   const navigate = useNavigate();
+
+  // Initialize EmailJS
+  useEffect(() => {
+    emailjs.init("h7FW0ReYv7_70X8U5"); // Initialize with your public key
+  }, []);
 
   // Filter tasks based on active tab
   const filteredTasks = () => {
@@ -444,7 +452,10 @@ const Dashboard = ({ onLogout }) => {
           setTasks([]);
           setProgress(0);
         }
+        setLoading(false); // Move here to ensure loading state is updated after data fetch
       });
+    } else {
+      setLoading(false); // Also update loading state if no user
     }
   };
 
@@ -464,20 +475,32 @@ const Dashboard = ({ onLogout }) => {
       onValue(userRef, (snapshot) => {
         if (snapshot.exists()) {
           setUserData(snapshot.val());
+        } else {
+          setLoading(false); // Update loading if no user data
         }
       });
       fetchTasks();
+    } else {
+      setLoading(false); // Update loading if no user
+    }
+  }, []); // Remove userData and emailSent from dependencies to prevent infinite loops
 
-      // Send email notification on login (only once per session)
-      if (userData && !emailSent) {
-        const templateParams = {
-          to_email: userData.email,
-          user_name: userData.name || 'User',
-          login_time: new Date().toLocaleString(),
-        };
+  // Separate useEffect for sending email to prevent loops
+  useEffect(() => {
+    // Only attempt to send email if we have user data and haven't sent one yet
+    if (userData && !emailSent) {
+      const user = auth.currentUser;
+      if (!user) return;
+      
+      const templateParams = {
+        to_email: user.email, // Use auth.currentUser.email instead of userData.email
+        user_name: userData.name || user.displayName || 'User',
+        login_time: new Date().toLocaleString(),
+      };
 
+      try {
         emailjs
-          .send('service_0x9tr4w', 'template_fs3wu8n', templateParams, 'LSYUfA2MmOon_Fzlv')
+          .send('service_7s8qa0f', 'template_k8j29w7', templateParams)
           .then((response) => {
             console.log('Email sent successfully:', response.status, response.text);
             setEmailSent(true); // Prevent sending multiple emails
@@ -485,17 +508,19 @@ const Dashboard = ({ onLogout }) => {
           .catch((error) => {
             console.error('Failed to send email:', error);
           });
+      } catch (error) {
+        console.error('Error sending email:', error);
       }
     }
-    setLoading(false);
-  }, [userData, emailSent]);
+  }, [userData, emailSent]); // Only run when userData changes
 
   useEffect(() => {
     if (tasks.length > 0) {
       const currentDate = new Date();
       const upcomingTasks = tasks.filter(task => {
-        if (!task.dueDate || task.completed) return false;
-        const dueDate = new Date(task.dueDate);
+        // Check if task has fromTime (not dueDate as in original code)
+        if (!task.fromTime || task.completed) return false;
+        const dueDate = new Date(task.fromTime);
         const diffTime = dueDate - currentDate;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         return diffDays >= 0 && diffDays <= 2; // Tasks due within 2 days
@@ -504,8 +529,8 @@ const Dashboard = ({ onLogout }) => {
       if (upcomingTasks.length > 0) {
         const newNotifications = upcomingTasks.map(task => ({
           id: task.id,
-          title: task.title,
-          message: `Task due ${new Date(task.dueDate).toLocaleDateString()}`,
+          title: task.name, // Use task.name instead of task.title
+          message: `Task due ${new Date(task.fromTime).toLocaleDateString()}`,
           timestamp: new Date().toISOString(),
           read: false
         }));
@@ -522,7 +547,7 @@ const Dashboard = ({ onLogout }) => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      onLogout();
+      if (onLogout) onLogout(); // Check if onLogout is defined
       navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);
@@ -566,10 +591,11 @@ const Dashboard = ({ onLogout }) => {
                      style={{ width: '70px', height: '70px' }}>
                   <FaUser style={{ fontSize: '1.8rem', color: 'white' }} />
                 </div>
-                <h5 className="mt-3 mb-1">{userData.name}</h5>
-                <small className="text-muted">{userData.email}</small>
+                <h5 className="mt-3 mb-1">{userData.name || 'User'}</h5>
+                <small className="text-muted">{userData.email || auth.currentUser?.email}</small>
               </div>
               
+              {/* Progress bar commented out in original code */}
               {/* <ProgressBar 
                 variant="primary" 
                 now={progress} 
@@ -592,6 +618,7 @@ const Dashboard = ({ onLogout }) => {
             </Card.Body>
           </Card>
           
+          {/* Navigation commented out in original code */}
           {/* <Nav className="flex-column">
             <Nav.Link href="#dashboard" className="mb-2 d-flex align-items-center">
               <FaCalendarAlt className="me-3" /> Dashboard
@@ -647,6 +674,7 @@ const Dashboard = ({ onLogout }) => {
               <Card 
                 className={`shadow-sm border-0 h-100 cursor-pointer ${activeTab === 'all' ? 'border-primary' : ''}`}
                 onClick={() => setActiveTab('all')}
+                style={{ cursor: 'pointer' }} // Add cursor style explicitly
               >
                 <Card.Body className="d-flex align-items-center">
                   <div className="bg-primary bg-opacity-10 rounded p-3 me-3">
@@ -664,6 +692,7 @@ const Dashboard = ({ onLogout }) => {
               <Card 
                 className={`shadow-sm border-0 h-100 cursor-pointer ${activeTab === 'completed' ? 'border-success' : ''}`}
                 onClick={() => setActiveTab('completed')}
+                style={{ cursor: 'pointer' }} // Add cursor style explicitly
               >
                 <Card.Body className="d-flex align-items-center">
                   <div className="bg-success bg-opacity-10 rounded p-3 me-3">
@@ -681,6 +710,7 @@ const Dashboard = ({ onLogout }) => {
               <Card 
                 className={`shadow-sm border-0 h-100 cursor-pointer ${activeTab === 'remaining' ? 'border-warning' : ''}`}
                 onClick={() => setActiveTab('remaining')}
+                style={{ cursor: 'pointer' }} // Add cursor style explicitly
               >
                 <Card.Body className="d-flex align-items-center">
                   <div className="bg-warning bg-opacity-10 rounded p-3 me-3">
@@ -779,6 +809,10 @@ const Dashboard = ({ onLogout }) => {
         refreshTasks={fetchTasks}
       />
       
+      {/* Add a logout button */}
+      <div className="text-center p-3 bg-light border-top">
+        
+      </div>
     </div>
   );
 };
