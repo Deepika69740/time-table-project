@@ -327,7 +327,8 @@ const TaskForm = ({ show, onHide, editingTask, setEditingTask, refreshTasks }) =
         fromTime: fromTime,
         toTime: toTime,
         createdAt: editingTask ? editingTask.createdAt : new Date().toISOString(),
-        completed: editingTask ? editingTask.completed : false
+        completed: editingTask ? editingTask.completed : false,
+        emailSent: editingTask ? editingTask.emailSent : false
       };
 
       if (editingTask) {

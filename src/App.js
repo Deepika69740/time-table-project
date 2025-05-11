@@ -10,7 +10,7 @@ import Login from './components/Auth/Login';
 function App() {
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('isAuthenticated') === 'true');
   
   const handleSignupSuccess = () => {
     setShowSignupModal(false);
@@ -26,6 +26,7 @@ function App() {
   
   const handleLoginSuccess = () => {
     setShowLoginModal(false);
+    localStorage.setItem('isAuthenticated', true);
     setIsAuthenticated(true);
     Swal.fire({
       title: 'Logged In!',
@@ -88,7 +89,10 @@ function App() {
               <div className="ms-auto">
                 <button
                   className="btn btn-outline-light"
-                  onClick={handleLogout}
+                  onClick={()=>{handleLogout()
+                    localStorage.removeItem('isAuthenticated');
+                    setIsAuthenticated(false);
+                  }}
                 >
                   <i className="bi bi-box-arrow-right me-1"></i> Logout
                 </button>

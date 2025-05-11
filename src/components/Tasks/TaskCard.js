@@ -482,7 +482,7 @@ const TaskCard = ({ task, id, setEditingTask, setShowTaskForm, refreshTasks, set
 
       <Card className="h-100">
         <Card.Body className="d-flex flex-column">
-          <div className="d-flex justify-content-between align-items-start">
+          <div className="d-flex justify-content-between align-items-start flex-wrap">
             <Card.Title className={task.completed ? 'text-success' : ''}>
               {task.completed && <FaCheck className="me-2" />}
               {task.name || 'Unnamed Task'}

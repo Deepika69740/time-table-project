@@ -26,15 +26,18 @@ const checkExpiredTasks = async () => {
           const task = tasks[taskId];
           const toTime = new Date(task.toTime);
 
-          if (!task.completed && toTime < now) {
+          if (!task.completed && !task.emailSent && toTime < now) {
             // ✅ Send Email Notification
             sendTaskExpiryEmail(email, task.name, task.toTime);
 
             // ✅ Mark task as completed to avoid duplicate emails
             const taskRef = db.ref(`users/${userId}/tasks/${taskId}`);
-            taskRef.update({ completed: true });
+            taskRef.update({ emailSent: true });
 
             console.log(`✅ Email sent & task marked complete: "${task.name}" for ${email}`);
+          }
+          else{
+            console.log(`❌ Task "${task.name}" is either completed or email already sent for ${email}`);
           }
         }
       }
