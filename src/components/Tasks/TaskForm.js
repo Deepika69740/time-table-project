@@ -241,8 +241,8 @@ const TaskForm = ({ show, onHide, editingTask, setEditingTask, refreshTasks }) =
   const formRef = useRef(null);
   
   // EmailJS configuration
-  const SERVICE_ID = "service_7s8qa0f";
-  const TEMPLATE_ID = "template_k8j29w7";
+  const SERVICE_ID = "service_j08812v";
+  const TEMPLATE_ID = "template_vuzpz4q";
   const PUBLIC_KEY = "h7FW0ReYv7_70X8U5";
 
   useEffect(() => {
