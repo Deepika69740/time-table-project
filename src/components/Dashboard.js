@@ -864,17 +864,17 @@ const Dashboard = ({ onLogout }) => {
             const data = snapshot.val();
             setUserData(data);
 
-            if (!emailSent) {
-              const templateParams = {
-                to_email: user.email,
-                user_name: data.name || user.displayName || 'User',
-                login_time: new Date().toLocaleString(),
-              };
+            // if (!emailSent) {
+            //   const templateParams = {
+            //     to_email: user.email,
+            //     user_name: data.name || user.displayName || 'User',
+            //     login_time: new Date().toLocaleString(),
+            //   };
 
-              emailjs.send('service_7s8qa0f', 'template_k8j29w7', templateParams)
-                .then(() => setEmailSent(true))
-                .catch(console.error);
-            }
+            //   emailjs.send('service_7s8qa0f', 'template_k8j29w7', templateParams)
+            //     .then(() => setEmailSent(true))
+            //     .catch(console.error);
+            // }
           }
         });
 

@@ -230,6 +230,8 @@ import { database, ref, push, update } from '../../firebase';
 import { getAuth } from 'firebase/auth';
 import Swal from 'sweetalert2';
 import emailjs from '@emailjs/browser';
+import { Meta } from 'react-router-dom';
+import axios from 'axios';
 
 const TaskForm = ({ show, onHide, editingTask, setEditingTask, refreshTasks }) => {
   const [taskName, setTaskName] = useState('');
@@ -276,15 +278,24 @@ const TaskForm = ({ show, onHide, editingTask, setEditingTask, refreshTasks }) =
         to_time: formatDateTime(taskData.toTime),
         to_email: user.email
       };
+      axios.post(`${process.env.REACT_APP_API_URL}/send-email`, templateParams)
+      .then((response) => {console.log("Email sent:", response.data);
+        return true;
+      }).catch((error) => {
+        console.error("Error sending email:", error)})
+    //   const response = await fetch(`${process.env.REACT_APP_API_URL}/send-email`, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json'
+    //   },
+    //   body: JSON.stringify(templateParams)
+    // });
 
-      const response = await emailjs.send(
-        SERVICE_ID,
-        TEMPLATE_ID,
-        templateParams,
-        PUBLIC_KEY
-      );
-      console.log("Email sent:", response);
-      return true;
+    // if (!response.ok) throw new Error('Failed to send email');
+    
+    // const result = await response.json();
+    // console.log('Email sent:', result);
+    return true;
     } catch (error) {
       console.error("Email failed:", error);
       return false;

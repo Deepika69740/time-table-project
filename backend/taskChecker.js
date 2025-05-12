@@ -4,7 +4,7 @@ const sendTaskExpiryEmail = require("./mailer");
 const serviceAccount = require("./serviceAccountKey.json");
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://react-fb-project-60aa4-default-rtdb.firebaseio.com" 
+  databaseURL: `https://${process.env.FIREBASE_DB_URL}.firebaseio.com`
 });
 
 const db = admin.database();
@@ -35,9 +35,6 @@ const checkExpiredTasks = async () => {
             taskRef.update({ emailSent: true });
 
             console.log(`✅ Email sent & task marked complete: "${task.name}" for ${email}`);
-          }
-          else{
-            console.log(`❌ Task "${task.name}" is either completed or email already sent for ${email}`);
           }
         }
       }
